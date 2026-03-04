@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Manage Categories</h2>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+    <!-- Add Category Form -->
+    <div
+        style="background: var(--bg-surface); padding: 2rem; border-radius: var(--radius); height: fit-content; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-main);">New Category</h3>
+        <form method="post" action="/categories">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required placeholder="e.g., Groceries">
+            </div>
+
+            <div class="form-group">
+                <label for="c_type">Type</label>
+                <select id="c_type" name="c_type" required>
+                    <option value="EXPENSE">Expense</option>
+                    <option value="INCOME">Income</option>
+                </select>
+            </div>
+
+            <button type="submit" style="width: 100%; margin-top: 1rem;">Add Category</button>
+        </form>
+    </div>
+
+    <!-- Category List -->
+    <div
+        style="background: var(--bg-surface); padding: 2rem; border-radius: var(--radius); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-main);">Existing Categories</h3>
+
+        {% if categories.is_empty() %}
+        <p style="color: var(--text-muted);">No categories added yet.</p>
+        {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in categories %}
+                <tr>
+                    <td style="font-weight: 500;">{{ cat.name }}</td>
+                    <td>
+                        <span class="tag {% if cat.c_type == " INCOME" %}income{% else %}expense{% endif %}">
+                            {{ cat.c_type }}
+                        </span>
+                    </td>
+                    <td style="text-align: right;">
+                        <!-- In a full app, we'd add edit/delete here -->
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

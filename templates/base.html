@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solo Finance Watcher</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <header>
+        <div class="logo" style="font-weight: 700; font-size: 1.25rem; color: var(--text-main);">
+            <a href="/" style="margin: 0; color: inherit;">🏦 Solo Finance</a>
+        </div>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/records/new">Add Record</a>
+            <a href="/categories">Categories</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            // Include extra params if needed
+        });
+    </script>
+</body>
+</html>

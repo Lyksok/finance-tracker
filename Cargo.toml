@@ -1,0 +1,20 @@
+[package]
+name = "solo_finance_watcher"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+askama = "0.12"
+askama_axum = "0.4"
+sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite", "chrono"] }
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+tower-http = { version = "0.5", features = ["fs", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+reqwest = "0.11"
+tokio = { version = "1", features = ["test-util"] }
