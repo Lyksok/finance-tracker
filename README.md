@@ -14,6 +14,9 @@ A fast, private, and simple personal finance tracking application written in Rus
 - **Backend**: [Rust](https://www.rust-lang.org/) + [Axum](https://github.com/tokio-rs/axum)
 - **Database**: [SQLite](https://sqlite.org/index.html) + [sqlx](https://github.com/launchbadge/sqlx)
 - **Templating**: [Askama](https://github.com/djc/askama) 
+- **Session Management**: [tower-sessions](https://github.com/maxcountryman/tower-sessions)
+- **Security & Hashing**: [Argon2](https://github.com/RustCrypto/password-hashes)
+- **Configuration**: [dotenvy](https://github.com/allan2/dotenvy)
 - **Styling**: Vanilla CSS (Modern Dark Theme)
 
 ## Getting Started
