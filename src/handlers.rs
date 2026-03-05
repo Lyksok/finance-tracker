@@ -115,9 +115,13 @@ pub async fn render_dashboard(
         net_balance: format!("{:.2}", (net_cents as f64) / 100.0),
         groups,
     };
-    
-    tracing::debug!("User {} accessed dashboard for month {}", auth_user.0.username, selected_month);
-    
+
+    tracing::debug!(
+        "User {} accessed dashboard for month {}",
+        auth_user.0.username,
+        selected_month
+    );
+
     Html(tpl.render().unwrap())
 }
 
@@ -164,7 +168,12 @@ pub async fn create_record(
     .await
     .unwrap();
 
-    tracing::info!("User {} created a new record: {} cents, category ID {}", auth_user.0.username, amount_cents, form.category_id);
+    tracing::info!(
+        "User {} created a new record: {} cents, category ID {}",
+        auth_user.0.username,
+        amount_cents,
+        form.category_id
+    );
 
     Redirect::to("/")
 }
@@ -265,7 +274,11 @@ pub async fn create_category(
         .await
         .unwrap();
 
-    tracing::info!("User {} created new category: {}", auth_user.0.username, form.name);
+    tracing::info!(
+        "User {} created new category: {}",
+        auth_user.0.username,
+        form.name
+    );
 
     Redirect::to("/categories")
 }
@@ -313,14 +326,11 @@ pub async fn login(
 
     if valid {
         let u = user.unwrap();
-        session
-            .insert("user_id", u.id)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to save session for user {}: {:?}", u.username, e);
-                StatusCode::INTERNAL_SERVER_ERROR
-            })?;
-            
+        session.insert("user_id", u.id).await.map_err(|e| {
+            tracing::error!("Failed to save session for user {}: {:?}", u.username, e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
         tracing::info!("User {} logged in successfully", u.username);
         return Ok(Redirect::to("/").into_response());
     }
@@ -375,9 +385,13 @@ pub async fn register(
         Ok(_) => {
             tracing::info!("New user registered successfully: {}", form.username);
             Ok(Redirect::to("/login").into_response())
-        },
+        }
         Err(e) => {
-            tracing::warn!("Failed registration attempt (username likely exists): {} - {:?}", form.username, e);
+            tracing::warn!(
+                "Failed registration attempt (username likely exists): {} - {:?}",
+                form.username,
+                e
+            );
             let tpl = RegisterTemplate {
                 logged_in: false,
                 error: Some("Username already exists".to_string()),
@@ -392,14 +406,11 @@ pub async fn register(
 }
 
 pub async fn logout(session: Session) -> Result<impl IntoResponse, StatusCode> {
-    session
-        .delete()
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to delete session on logout: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-    
+    session.delete().await.map_err(|e| {
+        tracing::error!("Failed to delete session on logout: {:?}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
     tracing::info!("A user logged out successfully");
     Ok(Redirect::to("/login").into_response())
 }
@@ -432,7 +443,10 @@ pub async fn update_profile(
         .is_ok();
 
     if !valid {
-        tracing::warn!("User {} failed to update password: incorrect current password", auth_user.0.username);
+        tracing::warn!(
+            "User {} failed to update password: incorrect current password",
+            auth_user.0.username
+        );
         let tpl = ProfileTemplate {
             logged_in: true,
             username: auth_user.0.username.clone(),
@@ -458,11 +472,18 @@ pub async fn update_profile(
         .execute(&state.pool)
         .await
         .map_err(|e| {
-            tracing::error!("Failed to update password hashing for user {}: {:?}", auth_user.0.username, e);
+            tracing::error!(
+                "Failed to update password hashing for user {}: {:?}",
+                auth_user.0.username,
+                e
+            );
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    tracing::info!("User {} updated their password successfully", auth_user.0.username);
+    tracing::info!(
+        "User {} updated their password successfully",
+        auth_user.0.username
+    );
 
     let tpl = ProfileTemplate {
         logged_in: true,

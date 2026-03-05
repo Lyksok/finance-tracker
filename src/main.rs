@@ -42,7 +42,11 @@ async fn main() {
                 .unwrap_or_else(|_| "finance_tracker=debug,tower_http=debug".into()),
         )
         .with(tracing_subscriber::fmt::layer().with_writer(std::io::stdout))
-        .with(tracing_subscriber::fmt::layer().with_writer(non_blocking).with_ansi(false))
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(non_blocking)
+                .with_ansi(false),
+        )
         .init();
 
     let database_url = "sqlite:finance.db";
