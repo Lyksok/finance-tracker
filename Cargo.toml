@@ -1,5 +1,5 @@
 [package]
-name = "solo_finance_watcher"
+name = "finance_tracker"
 version = "0.1.0"
 edition = "2021"
 

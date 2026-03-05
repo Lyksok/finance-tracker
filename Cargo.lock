@@ -459,6 +459,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
+name = "finance_tracker"
+version = "0.1.0"
+dependencies = [
+ "askama",
+ "askama_axum",
+ "axum",
+ "chrono",
+ "reqwest",
+ "serde",
+ "sqlx",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1826,23 +1843,6 @@ checksum = "86f4aa3ad99f2088c990dfa82d367e19cb29268ed67c574d10d0a4bfe71f07e0"
 dependencies = [
  "libc",
  "windows-sys 0.60.2",
-]
-
-[[package]]
-name = "solo_finance_watcher"
-version = "0.1.0"
-dependencies = [
- "askama",
- "askama_axum",
- "axum",
- "chrono",
- "reqwest",
- "serde",
- "sqlx",
- "tokio",
- "tower-http",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
