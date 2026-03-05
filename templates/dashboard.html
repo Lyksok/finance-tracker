@@ -14,17 +14,17 @@
 <div class="dashboard-summary">
     <div class="card income">
         <h3>Total Income</h3>
-        <div class="amount">${{ total_income }}</div>
+        <div class="amount">€{{ total_income }}</div>
     </div>
     <div class="card expense">
         <h3>Total Expense</h3>
-        <div class="amount">${{ total_expense }}</div>
+        <div class="amount">€{{ total_expense }}</div>
     </div>
     <div class="card">
         <h3>Net Balance</h3>
         <div class="amount"
             style="color: {% if net_balance.starts_with('-') %}var(--expense-color){% else %}var(--income-color){% endif %}">
-            ${{ net_balance }}
+            €{{ net_balance }}
         </div>
     </div>
 </div>
@@ -54,7 +54,7 @@
             </h4>
             <div style="font-weight: 700; font-size: 1.25rem; color: {% if group.category_type == " INCOME"
                 %}var(--income-color){% else %}var(--expense-color){% endif %}">
-                ${{ group.total }}
+                €{{ group.total }}
             </div>
         </div>
 
@@ -72,7 +72,7 @@
                 <tr>
                     <td style="color: var(--text-muted);">{{ tx.date }}</td>
                     <td>{{ tx.description }}</td>
-                    <td style="text-align: right; font-weight: 500;">${{ tx.formatted_amount() }}</td>
+                    <td style="text-align: right; font-weight: 500;">€{{ tx.formatted_amount() }}</td>
                     <td style="text-align: center;">
                         <a href="/records/{{ tx.id }}/edit"
                             style="color: var(--accent-primary); text-decoration: none; font-size: 0.875rem;">Edit</a>
