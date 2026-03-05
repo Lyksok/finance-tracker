@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card" style="max-width: 400px; margin: 2rem auto; padding: 2rem;">
+    <h2 style="margin-top: 0; margin-bottom: 1.5rem;">Profile</h2>
+
+    <p>Welcome, <strong>{{ username }}</strong>!</p>
+
+    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+    <h3 style="margin-top: 0; margin-bottom: 1rem;">Change Password</h3>
+
+    {% if let Some(err) = error %}
+    <div
+        style="background-color: #fee2e2; border-left: 4px solid #ef4444; color: #b91c1c; padding: 0.75rem 1rem; margin-bottom: 1.5rem; border-radius: 4px;">
+        {{ err }}
+    </div>
+    {% endif %}
+
+    {% if let Some(msg) = success %}
+    <div
+        style="background-color: #dcfce7; border-left: 4px solid #22c55e; color: #15803d; padding: 0.75rem 1rem; margin-bottom: 1.5rem; border-radius: 4px;">
+        {{ msg }}
+    </div>
+    {% endif %}
+
+    <form action="/profile" method="post" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Current Password</label>
+            <input type="password" name="current_password" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font: inherit;">
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">New Password</label>
+            <input type="password" name="new_password" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font: inherit;">
+        </div>
+
+        <button type="submit" class="btn" style="margin-top: 0.5rem; width: 100%; justify-content: center;">Update
+            Password</button>
+    </form>
+</div>
+{% endblock %}

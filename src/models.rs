@@ -2,6 +2,13 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 #[derive(Clone, Debug, FromRow, Serialize, Deserialize)]
+pub struct User {
+    pub id: i64,
+    pub username: String,
+    pub password_hash: String,
+}
+
+#[derive(Clone, Debug, FromRow, Serialize, Deserialize)]
 pub struct Category {
     pub id: i64,
     pub name: String,

@@ -1,22 +1,40 @@
+mod auth;
 mod handlers;
 mod models;
 mod templates;
 
 use axum::{
+    extract::FromRef,
     routing::{get, post},
     Router,
 };
+use axum_extra::extract::cookie::Key;
+
+#[derive(Clone)]
+pub struct AppState {
+    pub pool: sqlx::SqlitePool,
+    pub key: Key,
+}
+
+impl FromRef<AppState> for Key {
+    fn from_ref(state: &AppState) -> Self {
+        state.key.clone()
+    }
+}
 use sqlx::sqlite::SqlitePoolOptions;
 use tower_http::services::ServeDir;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use handlers::{
-    create_category, create_record, render_add_record, render_categories, render_dashboard,
-    render_edit_record, update_record,
+    create_category, create_record, login, logout, register, render_add_record, render_categories,
+    render_dashboard, render_edit_record, render_login, render_profile, render_register,
+    update_profile, update_record,
 };
 
 #[tokio::main]
 async fn main() {
+    dotenvy::dotenv().ok();
+
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -48,11 +66,18 @@ async fn main() {
     // Initialize Schema
     sqlx::query(
         r#"
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             c_type TEXT NOT NULL CHECK(c_type IN ('INCOME', 'EXPENSE')),
-            UNIQUE(name COLLATE NOCASE)
+            user_id INTEGER NOT NULL DEFAULT 1 REFERENCES users(id),
+            UNIQUE(name COLLATE NOCASE, user_id)
         );
 
         CREATE TABLE IF NOT EXISTS transactions (
@@ -61,6 +86,7 @@ async fn main() {
             date TEXT NOT NULL,
             description TEXT NOT NULL,
             category_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL DEFAULT 1 REFERENCES users(id),
             FOREIGN KEY(category_id) REFERENCES categories(id)
         );
         "#,
@@ -69,18 +95,44 @@ async fn main() {
     .await
     .unwrap();
 
+    // Default admin user setup
+    let admin_exists: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users WHERE username = 'admin'")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+    if admin_exists.0 == 0 {
+        let default_hash = bcrypt::hash("admin", bcrypt::DEFAULT_COST).unwrap();
+        sqlx::query("INSERT INTO users (username, password_hash) VALUES ('admin', ?)")
+            .bind(default_hash)
+            .execute(&pool)
+            .await
+            .unwrap();
+    }
+
+    let state = AppState {
+        pool: pool.clone(),
+        key: Key::generate(),
+    };
+
     // Setup Router
     let app = Router::new()
+        .route("/login", get(render_login).post(login))
+        .route("/register", get(render_register).post(register))
+        .route("/logout", post(logout))
+        .route("/profile", get(render_profile).post(update_profile))
         .route("/", get(render_dashboard))
         .route("/records/new", get(render_add_record))
         .route("/records", post(create_record))
         .route("/records/:id/edit", get(render_edit_record).post(update_record))
         .route("/categories", get(render_categories).post(create_category))
         .nest_service("/assets", ServeDir::new("assets"))
-        .with_state(pool.clone());
+        .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("Server running on http://localhost:3000");
+    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let addr = format!("0.0.0.0:{}", port);
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    println!("Server running on http://localhost:{}", port);
     axum::serve(listener, app).await.unwrap();
 }
 
@@ -97,11 +149,17 @@ mod tests {
 
         sqlx::query(
             r#"
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL
+            );
             CREATE TABLE IF NOT EXISTS categories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 c_type TEXT NOT NULL CHECK(c_type IN ('INCOME', 'EXPENSE')),
-                UNIQUE(name COLLATE NOCASE)
+                user_id INTEGER NOT NULL DEFAULT 1 REFERENCES users(id),
+                UNIQUE(name COLLATE NOCASE, user_id)
             );
             "#,
         )

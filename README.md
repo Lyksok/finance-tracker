@@ -24,11 +24,15 @@ A fast, private, and simple personal finance tracking application written in Rus
    git clone git@github.com:Lyksok/finance-tracker.git
    cd finance-tracker
    ```
-3. Run the application:
+3. Set up your environment file. Copy the `.env.example` file and configure your port:
+   ```bash
+   cp .env.example .env
+   ```
+4. Run the application:
    ```bash
    cargo run
    ```
-4. Open your browser and go to `http://localhost:3000`.
+5. Open your browser and go to `http://localhost:<PORT>/login`, replacing `<PORT>` with the value in your `.env` (defaults to 8000).
 
 ## License
 
