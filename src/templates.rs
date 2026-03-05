@@ -1,5 +1,5 @@
-use askama::Template;
 use crate::models::{Category, Transaction, TransactionDetail};
+use askama::Template;
 
 #[derive(Template)]
 #[template(path = "dashboard.html")]

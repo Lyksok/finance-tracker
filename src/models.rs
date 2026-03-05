@@ -18,7 +18,7 @@ pub struct Category {
 #[derive(Clone, Debug, FromRow, Serialize, Deserialize)]
 pub struct Transaction {
     pub id: i64,
-    pub amount: i64, // Stored in cents
+    pub amount: i64,  // Stored in cents
     pub date: String, // stored as YYYY-MM-DD string
     pub description: String,
     pub category_id: i64,

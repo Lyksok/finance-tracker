@@ -3,18 +3,17 @@ mod handlers;
 mod models;
 mod templates;
 
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
+    Argon2,
+};
 use axum::{
-    extract::FromRef,
     routing::{get, post},
     Router,
 };
 use sqlx::sqlite::SqlitePoolOptions;
 use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::SqliteStore;
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
-    Argon2,
-};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -95,10 +94,11 @@ async fn main() {
     .unwrap();
 
     // Default admin user setup
-    let admin_exists: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users WHERE username = 'admin'")
-        .fetch_one(&pool)
-        .await
-        .unwrap_or((0,));
+    let admin_exists: (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM users WHERE username = 'admin'")
+            .fetch_one(&pool)
+            .await
+            .unwrap_or((0,));
 
     if admin_exists.0 == 0 {
         let salt = SaltString::generate(&mut OsRng);
@@ -113,9 +113,7 @@ async fn main() {
             .expect("Failed to insert default admin user");
     }
 
-    let state = AppState {
-        pool: pool.clone(),
-    };
+    let state = AppState { pool: pool.clone() };
 
     // Setup Session Store
     let session_store = SqliteStore::new(pool.clone());
@@ -127,7 +125,6 @@ async fn main() {
         .with_same_site(SameSite::Lax)
         .with_expiry(Expiry::OnInactivity(time::Duration::days(1)));
 
-
     // Setup Router
     let app = Router::new()
         .route("/login", get(render_login).post(login))
@@ -137,7 +134,10 @@ async fn main() {
         .route("/", get(render_dashboard))
         .route("/records/new", get(render_add_record))
         .route("/records", post(create_record))
-        .route("/records/:id/edit", get(render_edit_record).post(update_record))
+        .route(
+            "/records/:id/edit",
+            get(render_edit_record).post(update_record),
+        )
         .route("/categories", get(render_categories).post(create_category))
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(session_layer)
