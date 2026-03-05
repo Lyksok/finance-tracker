@@ -1,0 +1,4 @@
+{$DOMAIN:localhost}:{$EXTERNAL_PORT:3000} {
+    tls internal
+    reverse_proxy localhost:{$PORT:8000}
+}

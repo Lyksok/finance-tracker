@@ -8,20 +8,19 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use axum_extra::extract::cookie::Key;
+use sqlx::sqlite::SqlitePoolOptions;
+use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
+use tower_sessions_sqlx_store::SqliteStore;
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
+    Argon2,
+};
 
 #[derive(Clone)]
 pub struct AppState {
     pub pool: sqlx::SqlitePool,
-    pub key: Key,
 }
 
-impl FromRef<AppState> for Key {
-    fn from_ref(state: &AppState) -> Self {
-        state.key.clone()
-    }
-}
-use sqlx::sqlite::SqlitePoolOptions;
 use tower_http::services::ServeDir;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -99,21 +98,35 @@ async fn main() {
     let admin_exists: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users WHERE username = 'admin'")
         .fetch_one(&pool)
         .await
-        .unwrap();
+        .unwrap_or((0,));
 
     if admin_exists.0 == 0 {
-        let default_hash = bcrypt::hash("admin", bcrypt::DEFAULT_COST).unwrap();
+        let salt = SaltString::generate(&mut OsRng);
+        let default_hash = Argon2::default()
+            .hash_password(b"admin", &salt)
+            .expect("Failed to hash default admin password")
+            .to_string();
         sqlx::query("INSERT INTO users (username, password_hash) VALUES ('admin', ?)")
             .bind(default_hash)
             .execute(&pool)
             .await
-            .unwrap();
+            .expect("Failed to insert default admin user");
     }
 
     let state = AppState {
         pool: pool.clone(),
-        key: Key::generate(),
     };
+
+    // Setup Session Store
+    let session_store = SqliteStore::new(pool.clone());
+    session_store.migrate().await.unwrap();
+
+    let session_layer = SessionManagerLayer::new(session_store)
+        .with_secure(true)
+        .with_http_only(true)
+        .with_same_site(SameSite::Lax)
+        .with_expiry(Expiry::OnInactivity(time::Duration::days(1)));
+
 
     // Setup Router
     let app = Router::new()
@@ -127,9 +140,10 @@ async fn main() {
         .route("/records/:id/edit", get(render_edit_record).post(update_record))
         .route("/categories", get(render_categories).post(create_category))
         .nest_service("/assets", ServeDir::new("assets"))
+        .layer(session_layer)
         .with_state(state);
 
-    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8000".to_string());
     let addr = format!("0.0.0.0:{}", port);
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     println!("Server running on http://localhost:{}", port);
