@@ -109,12 +109,15 @@ pub async fn render_dashboard(
 
     let tpl = DashboardTemplate {
         logged_in: true,
-        selected_month,
+        selected_month: selected_month.clone(),
         total_income: format!("{:.2}", (income_cents as f64) / 100.0),
         total_expense: format!("{:.2}", (expense_cents as f64) / 100.0),
         net_balance: format!("{:.2}", (net_cents as f64) / 100.0),
         groups,
     };
+    
+    tracing::debug!("User {} accessed dashboard for month {}", auth_user.0.username, selected_month);
+    
     Html(tpl.render().unwrap())
 }
 
@@ -153,13 +156,15 @@ pub async fn create_record(
         "INSERT INTO transactions (amount, date, description, category_id, user_id) VALUES (?, ?, ?, ?, ?)",
     )
     .bind(amount_cents)
-    .bind(form.date)
-    .bind(form.description)
+    .bind(&form.date)
+    .bind(&form.description)
     .bind(form.category_id)
     .bind(auth_user.0.id)
     .execute(&state.pool)
     .await
     .unwrap();
+
+    tracing::info!("User {} created a new record: {} cents, category ID {}", auth_user.0.username, amount_cents, form.category_id);
 
     Redirect::to("/")
 }
@@ -213,14 +218,16 @@ pub async fn update_record(
         "UPDATE transactions SET amount = ?, date = ?, description = ?, category_id = ? WHERE id = ? AND user_id = ?",
     )
     .bind(amount_cents)
-    .bind(form.date)
-    .bind(form.description)
+    .bind(&form.date)
+    .bind(&form.description)
     .bind(form.category_id)
     .bind(id)
     .bind(auth_user.0.id)
     .execute(&state.pool)
     .await
     .unwrap();
+
+    tracing::info!("User {} updated transaction {}", auth_user.0.username, id);
 
     Redirect::to("/").into_response()
 }
@@ -251,12 +258,14 @@ pub async fn create_category(
     Form(form): Form<CreateCategoryForm>,
 ) -> impl IntoResponse {
     sqlx::query("INSERT INTO categories (name, c_type, user_id) VALUES (?, ?, ?)")
-        .bind(form.name)
+        .bind(&form.name)
         .bind(form.c_type.to_uppercase())
         .bind(auth_user.0.id)
         .execute(&state.pool)
         .await
         .unwrap();
+
+    tracing::info!("User {} created new category: {}", auth_user.0.username, form.name);
 
     Redirect::to("/categories")
 }
@@ -303,12 +312,20 @@ pub async fn login(
     };
 
     if valid {
+        let u = user.unwrap();
         session
-            .insert("user_id", user.unwrap().id)
+            .insert("user_id", u.id)
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+            .map_err(|e| {
+                tracing::error!("Failed to save session for user {}: {:?}", u.username, e);
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?;
+            
+        tracing::info!("User {} logged in successfully", u.username);
         return Ok(Redirect::to("/").into_response());
     }
+
+    tracing::warn!("Failed login attempt for username: {}", form.username);
 
     let tpl = LoginTemplate {
         logged_in: false,
@@ -355,8 +372,12 @@ pub async fn register(
         .await;
 
     match res {
-        Ok(_) => Ok(Redirect::to("/login").into_response()),
-        Err(_) => {
+        Ok(_) => {
+            tracing::info!("New user registered successfully: {}", form.username);
+            Ok(Redirect::to("/login").into_response())
+        },
+        Err(e) => {
+            tracing::warn!("Failed registration attempt (username likely exists): {} - {:?}", form.username, e);
             let tpl = RegisterTemplate {
                 logged_in: false,
                 error: Some("Username already exists".to_string()),
@@ -374,7 +395,12 @@ pub async fn logout(session: Session) -> Result<impl IntoResponse, StatusCode> {
     session
         .delete()
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| {
+            tracing::error!("Failed to delete session on logout: {:?}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    
+    tracing::info!("A user logged out successfully");
     Ok(Redirect::to("/login").into_response())
 }
 
@@ -406,9 +432,10 @@ pub async fn update_profile(
         .is_ok();
 
     if !valid {
+        tracing::warn!("User {} failed to update password: incorrect current password", auth_user.0.username);
         let tpl = ProfileTemplate {
             logged_in: true,
-            username: auth_user.0.username,
+            username: auth_user.0.username.clone(),
             error: Some("Incorrect current password".to_string()),
             success: None,
         };
@@ -430,7 +457,12 @@ pub async fn update_profile(
         .bind(auth_user.0.id)
         .execute(&state.pool)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| {
+            tracing::error!("Failed to update password hashing for user {}: {:?}", auth_user.0.username, e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    tracing::info!("User {} updated their password successfully", auth_user.0.username);
 
     let tpl = ProfileTemplate {
         logged_in: true,

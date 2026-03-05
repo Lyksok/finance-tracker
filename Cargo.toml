@@ -19,6 +19,7 @@ tower-sessions = "0.13"
 tower-sessions-sqlx-store = { version = "0.14", features = ["sqlite"] }
 argon2 = "0.5.3"
 time = "0.3.47"
+tracing-appender = "0.2.4"
 
 [dev-dependencies]
 reqwest = "0.11"

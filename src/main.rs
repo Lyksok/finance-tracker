@@ -33,12 +33,16 @@ use handlers::{
 async fn main() {
     dotenvy::dotenv().ok();
 
+    let file_appender = tracing_appender::rolling::daily("logs", "events.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "solo_finance_watcher=debug,tower_http=debug".into()),
+                .unwrap_or_else(|_| "finance_tracker=debug,tower_http=debug".into()),
         )
-        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::fmt::layer().with_writer(std::io::stdout))
+        .with(tracing_subscriber::fmt::layer().with_writer(non_blocking).with_ansi(false))
         .init();
 
     let database_url = "sqlite:finance.db";
@@ -140,6 +144,7 @@ async fn main() {
         )
         .route("/categories", get(render_categories).post(create_category))
         .nest_service("/assets", ServeDir::new("assets"))
+        .layer(tower_http::trace::TraceLayer::new_for_http())
         .layer(session_layer)
         .with_state(state);
 
