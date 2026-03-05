@@ -1,17 +1,13 @@
 mod auth;
+mod db;
 mod handlers;
 mod models;
 mod templates;
 
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
-    Argon2,
-};
 use axum::{
     routing::{get, post},
     Router,
 };
-use sqlx::sqlite::SqlitePoolOptions;
 use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::SqliteStore;
 
@@ -24,9 +20,11 @@ use tower_http::services::ServeDir;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use handlers::{
-    create_category, create_record, login, logout, register, render_add_record, render_categories,
-    render_dashboard, render_edit_record, render_login, render_profile, render_register,
-    update_profile, update_record,
+    auth::{login, logout, register, render_login, render_register},
+    categories::{create_category, render_categories},
+    dashboard::render_dashboard,
+    profile::{render_profile, update_profile},
+    transactions::{create_record, render_add_record, render_edit_record, update_record},
 };
 
 #[tokio::main]
@@ -49,78 +47,7 @@ async fn main() {
         )
         .init();
 
-    let database_url = "sqlite:finance.db";
-    let pool = SqlitePoolOptions::new()
-        .max_connections(5)
-        .connect(database_url)
-        .await;
-
-    let pool = match pool {
-        Ok(pool) => pool,
-        Err(_) => {
-            // If DB doesn't exist, try creating it with sqlite
-            std::fs::File::create("finance.db").unwrap();
-            let pool = SqlitePoolOptions::new()
-                .max_connections(5)
-                .connect("sqlite:finance.db")
-                .await
-                .unwrap();
-            pool
-        }
-    };
-
-    // Initialize Schema
-    sqlx::query(
-        r#"
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            password_hash TEXT NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS categories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            c_type TEXT NOT NULL CHECK(c_type IN ('INCOME', 'EXPENSE')),
-            user_id INTEGER NOT NULL DEFAULT 1 REFERENCES users(id),
-            UNIQUE(name COLLATE NOCASE, user_id)
-        );
-
-        CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            amount INTEGER NOT NULL,
-            date TEXT NOT NULL,
-            description TEXT NOT NULL,
-            category_id INTEGER NOT NULL,
-            user_id INTEGER NOT NULL DEFAULT 1 REFERENCES users(id),
-            FOREIGN KEY(category_id) REFERENCES categories(id)
-        );
-        "#,
-    )
-    .execute(&pool)
-    .await
-    .unwrap();
-
-    // Default admin user setup
-    let admin_exists: (i64,) =
-        sqlx::query_as("SELECT COUNT(*) FROM users WHERE username = 'admin'")
-            .fetch_one(&pool)
-            .await
-            .unwrap_or((0,));
-
-    if admin_exists.0 == 0 {
-        let salt = SaltString::generate(&mut OsRng);
-        let default_hash = Argon2::default()
-            .hash_password(b"admin", &salt)
-            .expect("Failed to hash default admin password")
-            .to_string();
-        sqlx::query("INSERT INTO users (username, password_hash) VALUES ('admin', ?)")
-            .bind(default_hash)
-            .execute(&pool)
-            .await
-            .expect("Failed to insert default admin user");
-    }
-
+    let pool = db::init_db().await;
     let state = AppState { pool: pool.clone() };
 
     // Setup Session Store
@@ -162,6 +89,7 @@ async fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sqlx::sqlite::SqlitePoolOptions;
 
     #[tokio::test]
     async fn test_db_initialization() {
