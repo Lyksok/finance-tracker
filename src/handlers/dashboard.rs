@@ -6,7 +6,7 @@ use axum::{
 };
 use chrono::{Datelike, Local};
 use serde::Deserialize;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::format};
 
 use crate::auth::AuthUser;
 use crate::models::TransactionDetail;
@@ -62,11 +62,14 @@ pub async fn render_dashboard(
 
     let net_cents = income_cents - expense_cents;
 
+    let now = Local::now().naive_local();
+
     let tpl = DashboardTemplate {
         logged_in: true,
         selected_month: selected_month.clone(),
         total_income: format!("{:.2}", (income_cents as f64) / 100.0),
         total_expense: format!("{:.2}", (expense_cents as f64) / 100.0),
+        avg_expense: format!("{:.2}", (expense_cents as f64) / 100.0 / now.day() as f64),
         net_balance: format!("{:.2}", (net_cents as f64) / 100.0),
         groups,
     };

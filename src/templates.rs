@@ -8,6 +8,7 @@ pub struct DashboardTemplate {
     pub selected_month: String,
     pub total_income: String,
     pub total_expense: String,
+    pub avg_expense: String,
     pub net_balance: String,
     pub groups: Vec<CategoryGroup>,
 }

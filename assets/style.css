@@ -93,12 +93,27 @@ main {
   font-size: 2rem;
   font-weight: 700;
 }
+.card .average {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.card .average {
+  opacity: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  transition: opacity 0.3s ease;
+}
+.card:hover .average {
+    opacity: 1;
+}
 
 .card.income .amount { color: var(--income-color); }
 .card.expense .amount { color: var(--expense-color); }
+.card.expense .average { color: var(--text-main); }
 
 .text-income { color: var(--income-color) !important; }
 .text-expense { color: var(--expense-color) !important; }
+
 
 table {
   width: 100%;
