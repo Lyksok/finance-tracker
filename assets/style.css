@@ -49,7 +49,19 @@ nav a {
   transition: var(--transition);
 }
 
+nav form button {
+  color: var(--text-main);
+  text-decoration: none;
+  margin-left: 1.5rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
 nav a:hover {
+  color: var(--accent-primary);
+}
+
+nav form button:hover {
   color: var(--accent-primary);
 }
 
