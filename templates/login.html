@@ -28,6 +28,21 @@
             style="margin-top: 0.5rem; width: 100%; justify-content: center;">Login</button>
     </form>
 
+    <div style="display: flex; align-items: center; margin: 1.5rem 0;">
+        <div style="flex-grow: 1; height: 1px; background-color: var(--border-color, #e5e7eb);"></div>
+        <span style="padding: 0 1rem; color: #6b7280; font-size: 0.9rem;">or</span>
+        <div style="flex-grow: 1; height: 1px; background-color: var(--border-color, #e5e7eb);"></div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <a href="/auth/github" class="btn" style="background-color: #24292e; color: white; width: 100%; justify-content: center; text-decoration: none;">
+            Login with GitHub
+        </a>
+        <a href="/auth/google" class="btn" style="background-color: #ffffff; color: #444; border: 1px solid #ccc; width: 100%; justify-content: center; text-decoration: none;">
+            Login with Google
+        </a>
+    </div>
+
     <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
         Don't have an account? <a href="/register" style="color: var(--primary-color);">Register</a>
     </p>

@@ -25,6 +25,7 @@ use handlers::{
     dashboard::render_dashboard,
     profile::{render_profile, update_profile},
     transactions::{create_record, render_add_record, render_edit_record, update_record},
+    oauth::{handle_oauth_callback, start_oauth_flow},
 };
 
 #[tokio::main]
@@ -65,6 +66,8 @@ async fn main() {
         .route("/login", get(render_login).post(login))
         .route("/register", get(render_register).post(register))
         .route("/logout", post(logout))
+        .route("/auth/:provider", get(start_oauth_flow))
+        .route("/auth/:provider/callback", get(handle_oauth_callback))
         .route("/profile", get(render_profile).post(update_profile))
         .route("/", get(render_dashboard))
         .route("/records/new", get(render_add_record))

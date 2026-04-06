@@ -53,6 +53,13 @@ pub async fn init_db() -> SqlitePool {
             user_id INTEGER NOT NULL DEFAULT 1 REFERENCES users(id),
             FOREIGN KEY(category_id) REFERENCES categories(id)
         );
+
+        CREATE TABLE IF NOT EXISTS oauth_accounts (
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            provider TEXT NOT NULL,
+            provider_id TEXT NOT NULL,
+            PRIMARY KEY (provider, provider_id)
+        );
         "#,
     )
     .execute(&pool)

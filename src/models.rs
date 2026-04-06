@@ -190,3 +190,27 @@ impl TransactionDetail {
         format!("{:.2}", (self.amount as f64) / 100.0)
     }
 }
+
+#[derive(Clone, Debug, FromRow, Serialize, Deserialize)]
+pub struct OAuthAccount {
+    pub user_id: i64,
+    pub provider: String,
+    pub provider_id: String,
+}
+
+impl OAuthAccount {
+    pub async fn find_user_by_oauth(
+        pool: &SqlitePool,
+        provider: &str,
+        provider_id: &str,
+    ) -> Result<Option<User>, sqlx::Error> {
+        sqlx::query_as::<_, User>(
+            "SELECT u.* FROM users u INNER JOIN oauth_accounts o ON u.id = o.user_id WHERE o.provider = ? AND o.provider_id = ?"
+        )
+        .bind(provider)
+        .bind(provider_id)
+        .fetch_optional(pool)
+        .await
+    }
+}
+

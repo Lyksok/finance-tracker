@@ -20,7 +20,17 @@ tower-sessions-sqlx-store = { version = "0.14", features = ["sqlite"] }
 argon2 = "0.5.3"
 time = "0.3.47"
 tracing-appender = "0.2.4"
+oauth2 = "4.4"
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+clap = { version = "4.4", features = ["derive"] }
 
 [dev-dependencies]
-reqwest = "0.11"
 tokio = { version = "1", features = ["test-util"] }
+
+[[bin]]
+name = "finance_tracker"
+path = "src/main.rs"
+
+[[bin]]
+name = "migrate_account"
+path = "src/bin/migrate_account.rs"

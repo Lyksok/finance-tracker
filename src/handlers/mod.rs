@@ -3,3 +3,4 @@ pub mod categories;
 pub mod dashboard;
 pub mod profile;
 pub mod transactions;
+pub mod oauth;
