@@ -1,3 +1,6 @@
+run-app-raspberry:
+	screen -S finance-tracker ./target/aarch64-unknown-linux-gnu/release/finance_tracker
+
 run-app:
 	screen -S finance-tracker cargo run --release
 
