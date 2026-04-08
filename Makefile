@@ -1,8 +1,5 @@
 run-app-raspberry:
-	screen -S finance-tracker ./target/aarch64-unknown-linux-gnu/release/finance_tracker
-
-run-app:
-	screen -S finance-tracker cargo run --release
+	screen -S finance-tracker ./finance_tracker
 
 start-caddy:
 	sudo caddy start --config Caddyfile --envfile .env
