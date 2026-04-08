@@ -26,11 +26,3 @@ clap = { version = "4.4", features = ["derive"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["test-util"] }
-
-[[bin]]
-name = "finance_tracker"
-path = "src/main.rs"
-
-[[bin]]
-name = "migrate_account"
-path = "src/bin/migrate_account.rs"
