@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div
+    style="max-width: 600px; margin: 0 auto; background: var(--bg-surface); padding: 2rem; border-radius: var(--radius); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+    <h2 style="margin-bottom: 2rem; color: var(--text-main); font-size: 1.5rem; text-align: center;">Add New Transaction
+    </h2>
+
+    {% if categories.is_empty() %}
+    <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+        <p>You need to create categories before adding transactions.</p>
+        <a href="/categories"
+            style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: var(--accent-primary); color: white; border-radius: 8px; text-decoration: none; font-weight: 500;">Manage
+            Categories</a>
+    </div>
+    {% else %}
+    <form method="post" action="/records">
+        <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" required value="{{ today }}">
+        </div>
+
+        <div class="form-group">
+            <label for="amount">Amount (e.g., 50.25)</label>
+            <input type="number" id="amount" name="amount" step="0.01" min="0.01" required placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" required placeholder="What was this for?">
+        </div>
+
+        <div class="form-group">
+            <label for="category_id">Category</label>
+            <select id="category_id" name="category_id" required>
+                <option value="" disabled selected>Select a category...</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }} ({{ cat.c_type }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit"
+            style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem; border-radius: 8px;">
+            Save Transaction
+        </button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

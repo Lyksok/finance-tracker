@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div
+    style="max-width: 600px; margin: 0 auto; background: var(--bg-surface); padding: 2rem; border-radius: var(--radius); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+    <h2 style="margin-bottom: 2rem; color: var(--text-main); font-size: 1.5rem; text-align: center;">Edit Transaction
+    </h2>
+
+    <form method="post" action="/records/{{ transaction.id }}/edit">
+        <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" required value="{{ transaction.date }}">
+        </div>
+
+        <div class="form-group">
+            <label for="amount">Amount (e.g., 50.25)</label>
+            <input type="number" id="amount" name="amount" step="0.01" min="0.01" required
+                value="{{ formatted_amount }}">
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" required value="{{ transaction.description }}">
+        </div>
+
+        <div class="form-group">
+            <label for="category_id">Category</label>
+            <select id="category_id" name="category_id" required>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if cat.id==transaction.category_id %}selected{% endif %}>{{ cat.name }}
+                    ({{ cat.c_type }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit"
+            style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem; border-radius: 8px;">
+            Update Transaction
+        </button>
+    </form>
+</div>
+{% endblock %}
